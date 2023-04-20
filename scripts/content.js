@@ -59,8 +59,17 @@ let outgoing = [];
           gatherIntel(messageBlocks);
           document
             .querySelector(`#${elementId}`)
-            .addEventListener("click", () => {
-              console.log(outgoing);
+            .addEventListener("click", async () => {
+              const response = await fetch("http://127.0.0.1:80/chat", {
+                method: "POST",
+                headers: {
+                  Accept: "application/json",
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ chat: outgoing }),
+              });
+              const data = await response?.json();
+              sendMessage(data.reply);
             });
         })
         .catch((err) => {});
@@ -105,4 +114,17 @@ function gatherIntel(messageBlocks) {
     })
     .filter((messageBlock) => messageBlock);
   outgoing = messages;
+}
+
+function sendMessage(message) {
+  const mainEl = document.querySelector("#main");
+  const textareaEl = mainEl.querySelector('div[contenteditable="true"]');
+
+  if (!textareaEl) {
+    throw new Error("There is no opened conversation");
+  }
+
+  textareaEl.focus();
+  document.execCommand("insertText", false, message);
+  textareaEl.dispatchEvent(new Event("change", { bubbles: true }));
 }
